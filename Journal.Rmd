@@ -66,7 +66,7 @@ A continuación se muestran el numero de secuencias para los 3 niveles desde el 
 
 
 
-```{r echo=FALSE, fig.height=5, fig.width=5, message=FALSE, warning=FALSE, results='asis'}
+```{r echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
 kable(tb1, "html") %>%
   kable_styling(full_width = F)
 
