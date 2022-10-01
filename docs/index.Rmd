@@ -1,259 +1,33 @@
 ---
-title: "Tardanza en la vigilancia epidemiológica"
-author: "Paula Ruiz Rodríguez"
-email: "paula.ruiz-rodriguez@uv.es"
-date: "2022-09-25"
+title: "About R Markdown"
 output: html_document
 ---
 
-# Consideraciones previas sobre las secuencias analizadas
+<style type="text/css">
+.title {
+  display: none;
+}
 
-`Todas las submission analizadas son sobre hospedadores: Humanos.`
+#getting-started img {
+  margin-right: 10px;
+}
 
-`Todos los cálculos tienen en cuenta secuencias con fecha de recolección.`
+</style>
 
-`No se han filtrado secuencias por calidad.`
+<div class="row" style="padding-top: 30px;">
+<div class="col-sm-6">
 
-`El código para generar los resultados se encuentra en: https://gitlab.com/PathoGenOmics/cvd/get_gisaidR`
+# **R Markdown**
 
-```{r setup, include=FALSE}
-library(GISAIDR)
-library(ggplot2)
-library(tidyverse)
-library(scales)
-library(knitr)
-library(kableExtra)
-library(plotrix)
-library(formattable)
-Sys.setlocale("LC_TIME", "English")
-current_date <- as.character(Sys.Date())
-days_7 <- as.character(Sys.Date()-6)
-current_month <- format(Sys.Date(),"%Y-%m-01")
+### *Dynamic Documents for R* {style="padding-top: 0px;"}
 
-data <- read.csv("downloadedmetadata_2022-09-25.tsv",sep="\t", fileEncoding = "UTF-8", stringsAsFactors=FALSE)
-```
+R Markdown is an authoring format that enables easy creation of dynamic documents, presentations, and reports from R. It combines the core syntax of [markdown](https://daringfireball.net/projects/markdown/) (an easy to write plain text format) with embedded R code chunks that are run so their output can be included in the final document. 
 
-```{r}
-print("a")
-```
+R Markdown documents are fully reproducible (they can be automatically regenerated whenever underlying R code or data changes).
 
+R Markdown has many available output formats including [HTML](http://rmarkdown.rstudio.com/html_document_format.html), [PDF](http://rmarkdown.rstudio.com/pdf_document_format.html), [MS Word](http://rmarkdown.rstudio.com/word_document_format.html), [Beamer](http://rmarkdown.rstudio.com/beamer_presentation_format.html), [HTML5 slides](http://rmarkdown.rstudio.com/ioslides_presentation_format.html), [Tufte handouts](http://rmarkdown.rstudio.com/tufte_handout_format.html), [books](https://bookdown.org), [dashboards](http://rmarkdown.rstudio.com/flexdashboard/), and [websites](http://rmarkdown.rstudio.com/rmarkdown_websites.html).
 
+</div>
+<div class="col-sm-6">
 
-```{r generate plot1, message=FALSE, warning=FALSE, include=FALSE}
-data$date_submitted<-as.Date(data$date_submitted)
-plot_dataset<- data %>%
-  mutate(month = lubridate::floor_date(date_submitted, 'month')) %>%
-  group_by(month,upload) %>%
-  summarise(n = n())
-plot_dataset<-na.omit(plot_dataset)
-plot_dataset$upload <- factor(plot_dataset$upload, levels = c("> 2 months", "1-2 months", "<=1 month"))
-
-plot_dataset$month<-as.Date(plot_dataset$month)
-```
-
-# Distribución de secuencias españolas subidas en GISAID
-
-Aquí se muestran todas las secuencias de gisaid subidas desde el principio de la pandemia hasta la creación de este informe:
-
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-show(current_date)
-```
-
-Para evaluar la tardanza en la subida de secuencias y entorpecer la vigilancia epidemiológica, se han clasificado según los días de diferencia entre la fecha de recoleccion de la muestra y la fecha de subida a la base de datos. De esta forma se han clasificado en 3 niveles.
-
-1.  [**1 month**]{style="color:#3CBA54"}: La diferencia entre la fecha de muestreo y la de subida es igual o menor a 1 mes.
-2.  [**1-2 months**]{style="color:#f1c232"}: La diferencia entre la fecha de muestreo y la de subida es mayor que 1 mes pero menor que 2 meses.
-3.  [**\> 2 months**]{style="color:#cc0000"}: La diferencia entre la fecha de muestreo y la de subida es mayor que 2 meses.
-
-A continuación se muestran el numero de secuencias para los 3 niveles desde el principio de la pandemia:
-
-```{r message=FALSE, warning=FALSE, include=FALSE}
-tb1<- plot_dataset  %>%
-  group_by(upload) %>%
-  summarise(number = sum(n))%>%
-  mutate(freq = formattable::percent(number / sum(number))) %>% 
-  arrange(desc(freq))
-
-totaltb1<-sum(tb1$number)
-```
-
-```{r echo=FALSE, fig.height=5, fig.width=5, message=FALSE, warning=FALSE, results='asis'}
-kable(tb1, "html") %>%
-  kable_styling(full_width = F)
-
-print(paste0("Número total de secuencias analizadas: ", totaltb1))
-
-slices <- tb1$number
-lbls <- tb1$upload
-pie3D(slices,labels=lbls,explode=0.1, col=c("#3CBA54", "#f1c232","#cc0000"),radius=0.9)
-
-
-```
-
-Observamos que en los primeros meses de la pandemia la tardanza en la subida de secuencias era notable y se ha ido mejorando en el transcurso. Se observan que en algunos meses la mitad de secuencias subidas corresponden al pasado, solamente en Enero de 2022 en su totalidad se subieron secuencias con diferencia menor a 1 mes.
-
-```{r plot1, echo=FALSE, fig.height=6, fig.width=10, message=FALSE, warning=FALSE}
-plot1<-ggplot(plot_dataset, aes(x=month, y=n, fill=upload)) + 
-  geom_bar(stat="identity")+ scale_x_date(date_labels = "%b %Y")+ scale_y_continuous(expand = c(0, 0), limits = c(0, 10000))+
-  xlab("Submission date") + ylab("Nº of sequences")+ theme_minimal()+ theme(legend.position="bottom")+ 
-  scale_fill_manual(values=c("> 2 months"="#cc0000", "1-2 months"="#f1c232", "<=1 month"="#3CBA54"))+theme(axis.text=element_text(size=12),axis.title=element_text(size=14,face="bold"))
-plot1
-```
-
-## Secuencias españolas subidas en GISAID con un retraso mayor a 1 mes
-
-```{r message=FALSE, warning=FALSE, include=FALSE}
-data2 <- data[data$upload != "<=1 month", ]
-#data2 <- data2[na.omit(data2$date_submitted), ]
-data2$date_submitted<-as.Date(data2$date_submitted)
-dataplot2<-data2 %>%
-  mutate(month = lubridate::floor_date(date_submitted, 'month')) %>%
-  group_by(month,community) %>%
-  summarise(n = n())
-
-plot_2<-ggplot(dataplot2, aes(x=community, y=n, fill=community)) + geom_bar(stat="identity") + xlab("") + ylab("Number of sequences")   + theme_minimal()+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+theme(axis.text=element_text(size=12),axis.title=element_text(size=14,face="bold"))
-
-plot_3<-ggplot(dataplot2, aes(x=month, y=n, fill=community)) + geom_bar(stat="identity") + xlab("") + ylab("Number of sequences")   + theme_minimal()+ scale_x_date(date_labels = "%b %Y")
-plot_dataset4<-subset(dataplot2, format(as.Date(month),"%Y")==2022)
-plot_4<-ggplot(plot_dataset4, aes(x=community, y=n, fill=community)) + geom_bar(stat="identity") + xlab("") + ylab("Number of sequences") + facet_grid(vars(month), scales = "free") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
-```
-
-Para los siguientes plots solo se tienen encuenta las secuencias que tienen más de un mes de retraso en la subida a GISAID.
-
-```{r message=FALSE, warning=FALSE, include=FALSE}
-tb11<-tb1[tb1$upload != "<=1 month", ]
-```
-
-```{r echo=FALSE}
-print(paste0("Número total de secuencias analizadas: ", sum(tb11$number)))
-```
-
-A continuación se muestra el numero de secuencias con fecha de subida retardada desde el principio de la pandemia, por comunidad autonoma.
-
-```{r echo=FALSE, fig.height=7, fig.width=10, message=FALSE, warning=FALSE}
-plot_2
-```
-
-En la tabla observamos el top 5 de comunidades autonomas que más secuencias retrasan la subida desde el principio.
-
-```{r echo=FALSE, fig.height=7, fig.width=10, message=FALSE, warning=FALSE}
-
-tb2<-data2 %>%
-  group_by(community) %>%
-  summarise(n = n())
-tb2<-tb2[with(tb2, order(n,decreasing = TRUE)),]
-kable(tb2[1:5,], "html") %>%
-  kable_styling(full_width = F)
-
-```
-
-De las top 5 comunidades con mas secuencias retenidas, se muestra la distribucion de todas las secuencias subidas con el valor de dias de diferencia entre la fecha de recogida y la de subida.
-
-```{r echo=FALSE, fig.height=4, fig.width=10, message=FALSE, warning=FALSE}
-tb2<-tb2[1:5,]
-selected1 <- data[data$community %in% tb2$community,]
-ggplot(selected1, aes(x = community, y = date_diff, fill= community)) + 
-  ggdist::stat_halfeye(
-    adjust = .5, 
-    width = .6, 
-    .width = 0, 
-    justification = -.2, 
-    point_colour = NA
-  ) + 
-  geom_boxplot(
-    width = .15, 
-    outlier.shape = NA
-  ) + scale_y_continuous(expand = c(0, 0), limits = c(0, 250)) + geom_hline(yintercept=30, linetype="dashed", color = "red")+ xlab("") + ylab("Difference days")    + theme_minimal()
-```
-
-Distribucion temporal por mes y comunidad autonoma
-
-```{r echo=FALSE, fig.height=7, fig.width=10, message=FALSE, warning=FALSE}
-plot_3
-```
-
-Distribucion temporal por mes y comunidad autonoma en el año 2022
-
-```{r echo=FALSE, fig.height=15, fig.width=10, message=FALSE, warning=FALSE}
-plot_4+ scale_y_continuous(expand = c(0, 0), limits = c(0, 6000))
-```
-
-## Secuencias españolas subidas en GISAID con subidas en menos de un mes
-
-```{r message=FALSE, warning=FALSE, include=FALSE}
-data2 <- data[data$upload == "<=1 month", ]
-#data2 <- data2[na.omit(data2$date_submitted), ]
-data2$date_submitted<-as.Date(data2$date_submitted)
-dataplot2<-data2 %>%
-  mutate(month = lubridate::floor_date(date_submitted, 'month')) %>%
-  group_by(month,community) %>%
-  summarise(n = n())
-
-plot_2<-ggplot(dataplot2, aes(x=community, y=n, fill=community)) + geom_bar(stat="identity") + xlab("") + ylab("Number of sequences")   + theme_minimal()+ theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+theme(axis.text=element_text(size=12),axis.title=element_text(size=14,face="bold"))
-
-plot_3<-ggplot(dataplot2, aes(x=month, y=n, fill=community)) + geom_bar(stat="identity") + xlab("") + ylab("Number of sequences")   + theme_minimal()+ scale_x_date(date_labels = "%b %Y")
-plot_dataset4<-subset(dataplot2, format(as.Date(month),"%Y")==2022)
-plot_4<-ggplot(plot_dataset4, aes(x=community, y=n, fill=community)) + geom_bar(stat="identity") + xlab("") + ylab("Number of sequences") + facet_grid(vars(month), scales = "free") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
-
-```
-
-Para los siguientes plots solo se tienen encuenta las secuencias que tienen tienen mas secuencias actualizadas en subida a GISAID.
-
-```{r message=FALSE, warning=FALSE, include=FALSE}
-tb1<-tb1[tb1$upload == "<=1 month", ]
-```
-
-```{r echo=FALSE}
-print(paste0("Número total de secuencias analizadas: ", tb1$number))
-```
-
-A continuación se muestra el numero de secuencias con fecha de subida desde el principio de la pandemia, por comunidad autonoma.
-
-```{r echo=FALSE, fig.height=7, fig.width=10, message=FALSE, warning=FALSE}
-plot_2
-```
-
-En la tabla observamos el top 5 de comunidades autonomas que más secuencias que suben actualizadas.
-
-```{r echo=FALSE, fig.height=7, fig.width=10, message=FALSE, warning=FALSE}
-
-tb2<-data2 %>%
-  group_by(community) %>%
-  summarise(n = n())
-tb2<-tb2[with(tb2, order(n,decreasing = TRUE)),]
-kable(tb2[1:5,], "html") %>%
-  kable_styling(full_width = F)
-
-```
-
-De las top 5 comunidades con mas secuencias actualizadas, se muestra la distribucion de todas las secuencias subidas con el valor de dias de diferencia entre la fecha de recogida y la de subida.
-
-```{r echo=FALSE, fig.height=4, fig.width=10, message=FALSE, warning=FALSE}
-tb2<-tb2[1:5,]
-selected1 <- data[data$community %in% tb2$community,]
-ggplot(selected1, aes(x = community, y = date_diff, fill= community)) + 
-  ggdist::stat_halfeye(
-    adjust = .5, 
-    width = .6, 
-    .width = 0, 
-    justification = -.2, 
-    point_colour = NA
-  ) + 
-  geom_boxplot(
-    width = .15, 
-    outlier.shape = NA
-  ) + scale_y_continuous(expand = c(0, 0), limits = c(0, 250)) + geom_hline(yintercept=30, linetype="dashed", color = "red")+ xlab("") + ylab("Difference days")    + theme_minimal()
-```
-
-Distribucion temporal por mes y comunidad autonoma
-
-```{r echo=FALSE, fig.height=7, fig.width=10, message=FALSE, warning=FALSE}
-plot_3
-```
-
-Distribucion temporal por mes y comunidad autonoma en el año 2022
-
-```{r echo=FALSE, fig.height=15, fig.width=10, message=FALSE, warning=FALSE}
-plot_4+ scale_y_continuous(expand = c(0, 0), limits = c(0, 4000))
-```
+![](images/RMarkdownOutputFormats.png)
