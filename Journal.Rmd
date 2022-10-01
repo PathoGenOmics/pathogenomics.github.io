@@ -4,7 +4,7 @@ output:
   html_document:
     toc: true
     toc_float: true
-    collapsed: false
+    collapsed: true
     number_sections: false
     toc_depth: 1
     #code_folding: hide
@@ -19,11 +19,80 @@ IMPORTANT: You can delete everything in here and start fresh. You might want to 
 
 This is an .Rmd file. It is plain text with special features. Any time you write just like this, it will be compiled to normal text in the website. If you put a \# in front of your text, it will create a top level-header.
 
-# My first post
+# Distribución de secuencias españolas subidas en GISAID
 
-Code last compiled: `r Sys.Date()`
+Aquí se muestran todas las secuencias de gisaid subidas desde el principio de la pandemia hasta la creación de este informe:
+Sequences last retrieved in Spain: `r Sys.Date()`
 
-Notice that whatever you define as a top level header, automatically gets put into the table of contents bar on the left. 
+```{r , include=FALSE}
+library(GISAIDR)
+library(ggplot2)
+library(tidyverse)
+library(scales)
+library(knitr)
+library(kableExtra)
+library(plotrix)
+library(formattable)
+library(plotly)
+Sys.setlocale("LC_TIME", "English")
+current_date <- as.character(Sys.Date())
+days_7 <- as.character(Sys.Date()-6)
+current_month <- format(Sys.Date(),"%Y-%m-01")
+
+data <- read.csv("downloadedmetadata_2022-09-25.tsv",sep="\t", fileEncoding = "UTF-8", stringsAsFactors=FALSE)
+```
+
+```{r generate plot1, message=FALSE, warning=FALSE, include=FALSE}
+data$date_submitted<-as.Date(data$date_submitted)
+plot_dataset<- data %>%
+  mutate(month = lubridate::floor_date(date_submitted, 'month')) %>%
+  group_by(month,upload) %>%
+  summarise(n = n())
+plot_dataset<-na.omit(plot_dataset)
+plot_dataset$upload <- factor(plot_dataset$upload, levels = c("> 2 months", "1-2 months", "<=1 month"))
+
+plot_dataset$month<-as.Date(plot_dataset$month)
+```
+
+Para evaluar la tardanza en la subida de secuencias y entorpecer la vigilancia epidemiológica, se han clasificado según los días de diferencia entre la fecha de recoleccion de la muestra y la fecha de subida a la base de datos. De esta forma se han clasificado en 3 niveles.
+
+1.  [**1 month**]{style="color:#3CBA54"}: La diferencia entre la fecha de muestreo y la de subida es igual o menor a 1 mes.
+2.  [**1-2 months**]{style="color:#f1c232"}: La diferencia entre la fecha de muestreo y la de subida es mayor que 1 mes pero menor que 2 meses.
+3.  [**\> 2 months**]{style="color:#cc0000"}: La diferencia entre la fecha de muestreo y la de subida es mayor que 2 meses.
+
+A continuación se muestran el numero de secuencias para los 3 niveles desde el principio de la pandemia:
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+tb1<- plot_dataset  %>%
+  group_by(upload) %>%
+  summarise(number = sum(n))%>%
+  mutate(freq = formattable::percent(number / sum(number))) %>% 
+  arrange(desc(freq))
+
+totaltb1<-sum(tb1$number)
+```
+
+```{r echo=FALSE, fig.height=5, fig.width=5, message=FALSE, warning=FALSE, results='asis'}
+kable(tb1, "html") %>%
+  kable_styling(full_width = F)
+
+print(paste0("Número total de secuencias analizadas: ", totaltb1))
+
+colors <- c("#3CBA54", "#f1c232","#cc0000")
+
+fig <- plot_ly(tb1, labels = ~upload, values = ~number, type = 'pie',
+        textposition = 'inside',
+        textinfo = 'label+percent',
+        insidetextfont = list(color = '#FFFFFF'),
+        hoverinfo = 'text',
+        text = ~paste( number, ' sequences'),
+        marker = list(colors = colors,
+                      line = list(color = '#FFFFFF', width = 1)),
+                      #The 'pull' attribute can also be used to create space between the sectors
+        showlegend = TRUE)
+
+fig
+```
 
 ## Second level header
 
