@@ -12,19 +12,7 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(message=FALSE,warning=FALSE, cache=TRUE)
-```
 
-IMPORTANT: You can delete everything in here and start fresh. You might want to start by not deleting anything above this line until you know what that stuff is doing.
-
-
-This is an .Rmd file. It is plain text with special features. Any time you write just like this, it will be compiled to normal text in the website. If you put a \# in front of your text, it will create a top level-header.
-
-# Distribución de secuencias españolas subidas en GISAID
-
-Aquí se muestran todas las secuencias de gisaid subidas desde el principio de la pandemia hasta la creación de este informe:
-Sequences last retrieved in Spain: `r Sys.Date()`
-
-```{r , include=FALSE}
 library(GISAIDR)
 library(ggplot2)
 library(tidyverse)
@@ -52,7 +40,21 @@ plot_dataset<-na.omit(plot_dataset)
 plot_dataset$upload <- factor(plot_dataset$upload, levels = c("> 2 months", "1-2 months", "<=1 month"))
 
 plot_dataset$month<-as.Date(plot_dataset$month)
+
+tb1<- plot_dataset  %>%
+  group_by(upload) %>%
+  summarise(number = sum(n))%>%
+  mutate(freq = formattable::percent(number / sum(number))) %>% 
+  arrange(desc(freq))
+
+totaltb1<-sum(tb1$number)
 ```
+
+# Distribución de secuencias españolas subidas en GISAID
+
+Aquí se muestran todas las secuencias de gisaid subidas desde el principio de la pandemia hasta la creación de este informe:
+
+`r totaltb1` sequences retrieved for the last time in Spain on `r Sys.Date()`
 
 Para evaluar la tardanza en la subida de secuencias y entorpecer la vigilancia epidemiológica, se han clasificado según los días de diferencia entre la fecha de recoleccion de la muestra y la fecha de subida a la base de datos. De esta forma se han clasificado en 3 niveles.
 
@@ -62,15 +64,7 @@ Para evaluar la tardanza en la subida de secuencias y entorpecer la vigilancia e
 
 A continuación se muestran el numero de secuencias para los 3 niveles desde el principio de la pandemia:
 
-```{r message=FALSE, warning=FALSE, include=FALSE}
-tb1<- plot_dataset  %>%
-  group_by(upload) %>%
-  summarise(number = sum(n))%>%
-  mutate(freq = formattable::percent(number / sum(number))) %>% 
-  arrange(desc(freq))
 
-totaltb1<-sum(tb1$number)
-```
 
 ```{r echo=FALSE, fig.height=5, fig.width=5, message=FALSE, warning=FALSE, results='asis'}
 kable(tb1, "html") %>%
