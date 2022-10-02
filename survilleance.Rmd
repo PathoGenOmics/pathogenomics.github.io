@@ -56,9 +56,9 @@ tb1<- plot_dataset  %>%
 totaltb1<-sum(tb1$number)
 ```
 
-# Distribución de secuencias españolas subidas en GISAID
+# Spanish sequences uploaded in GISAID
 
-Aquí se muestran todas las secuencias de gisaid subidas desde el principio de la pandemia hasta la creación de este informe:
+Aquí se muestran todas las secuencias de gisaid subidas desde el principio de la pandemia hasta la creación de este informe.
 
 `r totaltb1` sequences retrieved for the last time in Spain on `r Sys.Date()`
 
