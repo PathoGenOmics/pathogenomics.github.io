@@ -5,7 +5,7 @@ navbar:
     - text: "Home"
       href: index.html
     - text: "Submissions in GISAID"
-      href: Journal.html
+      href: survilleance.html
     - text: "Links"
       href: Links.html
 output_dir: "docs"

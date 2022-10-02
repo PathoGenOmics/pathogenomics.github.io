@@ -9,6 +9,12 @@ output:
     toc_depth: 1
     #code_folding: hide
 ---
+<style>
+body {
+text-align: justify}
+</style>
+
+The main objective of this report is to be able to quantify the upload of Spanish SARS-CoV-2 sequences in GISAID available to researchers. For good monitoring of the pandemic, the sequences should be uploaded as soon as possible when the sample is taken from the patient, but many times this is not the case, and we can have sequences uploaded today that infected a patient 2 years ago.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(message=FALSE,warning=FALSE, cache=TRUE)
